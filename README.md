@@ -1,5 +1,5 @@
 # ShortVolumeData
-Short volume statistics plugin, scraped from Quandl, for tradingview. Volumes are recorded for NYSE and NASDAQ exchanges.
+We present a short volume statistics plugin, scraped from Quandl, for tradingview. Volumes are recorded for NYSE and NASDAQ exchanges.
 
 The following figures illustrate the code's applicability for identifying short squeezes.
 
