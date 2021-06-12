@@ -1,0 +1,55 @@
+study("Short Volume: ")
+
+// Scrape data from Quandl and enter ticker
+manual_ticker = input(type=input.bool,defval=false,title="Enter Ticker Manually")
+T = input(type=input.string,defval="TSLA",title="Symbol")
+ticker = manual_ticker ? T : syminfo.ticker
+ticker1 = "FINRA/FNSQ_" + ticker
+ticker2 = "FINRA/FNYX_" + ticker
+qa = quandl(ticker1) // Nasdaq
+qb = quandl(ticker2) // NYSE
+Q = qa+qb // Short interest from NASDAQ and NYSE Exchanges
+
+// Remaining inputs are defined
+string s_out1 = "Default"
+string s_out2 = "Percent Rank"
+string s_out3 = "Stochastic"
+string s_out4 = "Relative Strength Index"
+output = input(title="Output Method",defval=s_out1, options=[s_out1,s_out2,s_out3,s_out4])
+int u_len = input(type=input.integer,defval=14,minval=1,title="Length (for %Rank,Stoch,RSI)")
+color col_si = input(type=input.color,defval=color.new(color.black,0),title="Color for Short Interest")
+color col_20 = input(type=input.color,defval=color.new(color.orange,20),title="20 SMA")
+color col_200 = input(type=input.color,defval=color.new(color.red,20),title="200 SMA")
+
+// Calculations
+f_out(method,length)=>
+    if method == s_out2
+        percentrank(Q,u_len)
+    else
+        if method == s_out3
+            sma(stoch(Q,Q,Q,u_len),3)
+        else
+            if method == s_out4
+                rsi(Q,u_len)
+            else
+                Q
+    
+out = f_out(output,u_len)
+
+fix = barstate.isrealtime ? na : out
+
+ma_st = sma(out,20)
+ma_lt = sma(out,200)
+
+// Plot final series
+pq = plot(fix,style=plot.style_line,color=col_si,title="Short Interest")
+pst = plot(ma_st,color=col_20,linewidth=1,title="20 SMA")
+plt = plot(ma_lt,color=col_200,linewidth=2,title="200 SMA")
+
+fill(pq,pst,out>ma_st ? color.red : color.lime,transp=80,title="20 SMA Fill")
+fill(pq,plt,out>ma_lt ? color.red : color.lime,transp=50,title="200 SMA Fill")
+
+// Upper & Lower Bounds for Rank, Stoch, and RSI
+hline(output==s_out1 ? na : output==s_out4 ? 70 : 80,color=color.gray,title="Upper Bounds")
+hline(output==s_out1 ? na : output==s_out4 ? 30 : 20,color=color.gray,title="Lower Bounds")
+
